@@ -1,2 +1,345 @@
-<h1>블로그</h1>
-<p style="color: blue"> 반갑습니다.</p?
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>실시간 한 줄 방명록 (로그인 없음)</title>
+
+  <style>
+    /* 기본 설정 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      background: #f4f5f7;
+      color: #202124;
+      font-family:
+        Pretendard,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* 전체 컨테이너 */
+    .container {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* 헤더 */
+    .header {
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      margin: 0;
+      color: #777;
+      font-size: 15px;
+    }
+
+    /* 카드 */
+    .card {
+      margin-bottom: 18px;
+      padding: 24px;
+      border: 1px solid #e1e3e6;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    /* 입력 폼 배치 수정 (닉네임과 메시지) */
+    .guestbook-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nickname-input {
+      width: 150px;
+      height: 46px;
+      padding: 0 15px;
+      border: 1px solid #d7d9dc;
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.2s;
+    }
+
+    .message-input {
+      flex: 1;
+      min-width: 0;
+      height: 46px;
+      padding: 0 15px;
+      border: 1px solid #d7d9dc;
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .nickname-input:focus,
+    .message-input:focus {
+      border-color: #777;
+      box-shadow: 0 0 0 3px rgba(100, 100, 100, 0.1);
+    }
+
+    .submit-button {
+      flex-shrink: 0;
+      min-width: 82px;
+      height: 46px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 10px;
+      background: #303134;
+      color: #fff;
+      font-weight: 700;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .submit-button:hover {
+      background: #111;
+    }
+
+    .submit-button:active {
+      transform: translateY(1px);
+    }
+
+    .submit-button:disabled {
+      cursor: not-allowed;
+      background: #aaa;
+    }
+
+    /* 방명록 목록 */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .list-header h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .count {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .guestbook-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .guestbook-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid #eceef0;
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .author {
+      flex: 0 0 110px;
+      overflow: hidden;
+      color: #333;
+      font-size: 14px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .message {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: #555;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .created-at {
+      flex-shrink: 0;
+      color: #999;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .empty-message,
+    .loading-message {
+      padding: 34px 15px;
+      color: #999;
+      text-align: center;
+    }
+
+    .status-message {
+      display: none;
+      margin: 12px 0 0;
+      color: #666;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .status-message.error {
+      color: #c62828;
+    }
+
+    /* 모바일 화면 */
+    @media (max-width: 600px) {
+      body {
+        padding: 24px 14px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 14px;
+      }
+
+      .header h1 {
+        font-size: 25px;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .nickname-input {
+        width: 100%;
+      }
+
+      .submit-button {
+        width: 100%;
+      }
+
+      .guestbook-item {
+        display: block;
+      }
+
+      .author {
+        margin-bottom: 5px;
+      }
+
+      .created-at {
+        display: block;
+        margin-top: 7px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>실시간 한 줄 방명록</h1>
+      <p>로그인 없이 누구나 자유롭게 한 줄 메시지를 남겨보세요.</p>
+    </header>
+
+    <section id="formCard" class="card">
+      <form id="guestbookForm" class="guestbook-form">
+        <div class="form-row">
+          <input
+            id="nicknameInput"
+            class="nickname-input"
+            type="text"
+            maxlength="10"
+            placeholder="닉네임 (최대 10자)"
+            autocomplete="off"
+            required
+          />
+          <input
+            id="messageInput"
+            class="message-input"
+            type="text"
+            maxlength="200"
+            placeholder="한 줄 메시지를 입력하세요."
+            autocomplete="off"
+            required
+          />
+          <button id="submitButton" class="submit-button" type="submit">
+            등록
+          </button>
+        </div>
+      </form>
+      <p id="statusMessage" class="status-message"></p>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <h2>방명록</h2>
+        <span id="guestbookCount" class="count">0개</span>
+      </div>
+
+      <ul id="guestbookList" class="guestbook-list">
+        <li class="loading-message">방명록을 불러오는 중입니다.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="module">
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    /* Firebase 설정값 */
+  const firebaseConfig = {
+   apiKey: "AIzaSyCcHFSk3NRpgLkvOra-mYRQdsiwyxbnfbs",
+   authDomain: "sonice-13ad5.firebaseapp.com",
+   projectId: "sonice-13ad5",
+   storageBucket: "sonice-13ad5.firebasestorage.app",
+   messagingSenderId: "343012493632",
+   appId: "1:343012493632:web:88ecfaab21071f1124d2a5",
+   measurementId: "G-H9MP5SVCL1"
+};
+    /* Firebase 초기화 */
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    /* HTML 요소 */
+    const guestbookForm = document.getElementById("guestbookForm");
+    const nicknameInput = document.getElementById("nicknameInput");
+    const messageInput = document.getElementById("messageInput
