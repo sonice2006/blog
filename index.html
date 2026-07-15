@@ -1,262 +1,152 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>실시간 한 줄 방명록 (로그인 없음)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>실시간 방명록</title>
 
   <style>
-    /* 기본 설정 */
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      min-height: 100vh;
       padding: 40px 20px;
-      background: #f4f5f7;
-      color: #202124;
-      font-family:
-        Pretendard,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      font-family: Arial, sans-serif;
     }
 
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    /* 전체 컨테이너 */
     .container {
       width: 100%;
-      max-width: 720px;
+      max-width: 650px;
       margin: 0 auto;
     }
 
-    /* 헤더 */
-    .header {
-      margin-bottom: 22px;
+    h1 {
+      margin-bottom: 25px;
       text-align: center;
+      font-size: 28px;
     }
 
-    .header h1 {
-      margin: 0 0 8px;
-      font-size: 30px;
-      font-weight: 700;
-      letter-spacing: -1px;
-    }
-
-    .header p {
-      margin: 0;
-      color: #777;
-      font-size: 15px;
-    }
-
-    /* 카드 */
     .card {
-      margin-bottom: 18px;
-      padding: 24px;
-      border: 1px solid #e1e3e6;
-      border-radius: 16px;
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
       background: #fff;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     }
 
-    /* 입력 폼 배치 수정 (닉네임과 메시지) */
-    .guestbook-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .form-row {
+    .input-group {
       display: flex;
       gap: 10px;
     }
 
-    .nickname-input {
-      width: 150px;
-      height: 46px;
-      padding: 0 15px;
-      border: 1px solid #d7d9dc;
-      border-radius: 10px;
+    input {
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       outline: none;
-      background: #fff;
-      transition: border-color 0.2s;
+      font-size: 15px;
     }
 
-    .message-input {
+    input:focus {
+      border-color: #777;
+    }
+
+    #authorInput {
+      width: 130px;
+    }
+
+    #messageInput {
       flex: 1;
       min-width: 0;
-      height: 46px;
-      padding: 0 15px;
-      border: 1px solid #d7d9dc;
-      border-radius: 10px;
-      outline: none;
-      background: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .nickname-input:focus,
-    .message-input:focus {
-      border-color: #777;
-      box-shadow: 0 0 0 3px rgba(100, 100, 100, 0.1);
-    }
-
-    .submit-button {
-      flex-shrink: 0;
-      min-width: 82px;
-      height: 46px;
+    button {
+      height: 44px;
       padding: 0 18px;
       border: 0;
-      border-radius: 10px;
-      background: #303134;
+      border-radius: 8px;
+      background: #333;
       color: #fff;
-      font-weight: 700;
-      transition: background 0.2s, transform 0.1s;
+      font-size: 15px;
+      cursor: pointer;
     }
 
-    .submit-button:hover {
+    button:hover {
       background: #111;
     }
 
-    .submit-button:active {
-      transform: translateY(1px);
-    }
-
-    .submit-button:disabled {
+    button:disabled {
       cursor: not-allowed;
       background: #aaa;
     }
 
-    /* 방명록 목록 */
-    .list-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
+    .status {
+      margin: 12px 0 0;
+      color: #777;
+      font-size: 13px;
+      text-align: center;
     }
 
-    .list-header h2 {
-      margin: 0;
-      font-size: 19px;
-    }
-
-    .count {
-      color: #888;
-      font-size: 14px;
+    .status.error {
+      color: #d32f2f;
     }
 
     .guestbook-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
     .guestbook-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border: 1px solid #eceef0;
-      border-radius: 10px;
-      background: #fafafa;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .guestbook-item:last-child {
+      border-bottom: 0;
     }
 
     .author {
-      flex: 0 0 110px;
-      overflow: hidden;
-      color: #333;
-      font-size: 14px;
-      font-weight: 700;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      margin-right: 8px;
+      font-weight: bold;
     }
 
     .message {
-      flex: 1;
-      min-width: 0;
-      overflow-wrap: anywhere;
       color: #555;
-      font-size: 15px;
-      line-height: 1.5;
     }
 
-    .created-at {
-      flex-shrink: 0;
+    .date {
+      display: block;
+      margin-top: 6px;
       color: #999;
       font-size: 12px;
-      white-space: nowrap;
     }
 
-    .empty-message,
-    .loading-message {
-      padding: 34px 15px;
+    .empty {
+      padding: 25px 0;
       color: #999;
       text-align: center;
     }
 
-    .status-message {
-      display: none;
-      margin: 12px 0 0;
-      color: #666;
-      font-size: 13px;
-      text-align: center;
-    }
-
-    .status-message.error {
-      color: #c62828;
-    }
-
-    /* 모바일 화면 */
     @media (max-width: 600px) {
       body {
-        padding: 24px 14px;
+        padding: 20px 12px;
       }
 
-      .card {
-        padding: 18px;
-        border-radius: 14px;
-      }
-
-      .header h1 {
-        font-size: 25px;
-      }
-
-      .form-row {
+      .input-group {
         flex-direction: column;
       }
 
-      .nickname-input {
+      #authorInput,
+      #messageInput,
+      button {
         width: 100%;
-      }
-
-      .submit-button {
-        width: 100%;
-      }
-
-      .guestbook-item {
-        display: block;
-      }
-
-      .author {
-        margin-bottom: 5px;
-      }
-
-      .created-at {
-        display: block;
-        margin-top: 7px;
       }
     }
   </style>
@@ -264,56 +154,52 @@
 
 <body>
   <main class="container">
-    <header class="header">
-      <h1>실시간 한 줄 방명록</h1>
-      <p>로그인 없이 누구나 자유롭게 한 줄 메시지를 남겨보세요.</p>
-    </header>
+    <h1>실시간 방명록</h1>
 
-    <section id="formCard" class="card">
-      <form id="guestbookForm" class="guestbook-form">
-        <div class="form-row">
-          <input
-            id="nicknameInput"
-            class="nickname-input"
-            type="text"
-            maxlength="10"
-            placeholder="닉네임 (최대 10자)"
-            autocomplete="off"
-            required
-          />
-          <input
-            id="messageInput"
-            class="message-input"
-            type="text"
-            maxlength="200"
-            placeholder="한 줄 메시지를 입력하세요."
-            autocomplete="off"
-            required
-          />
-          <button id="submitButton" class="submit-button" type="submit">
-            등록
-          </button>
-        </div>
+    <section class="card">
+      <form id="guestbookForm" class="input-group">
+        <input
+          id="authorInput"
+          type="text"
+          maxlength="20"
+          placeholder="아이디"
+          required
+        >
+
+        <input
+          id="messageInput"
+          type="text"
+          maxlength="200"
+          placeholder="메시지를 입력하세요"
+          required
+        >
+
+        <button id="submitButton" type="submit">
+          등록
+        </button>
       </form>
-      <p id="statusMessage" class="status-message"></p>
+
+      <p id="status" class="status">Firebase 연결 중...</p>
     </section>
 
     <section class="card">
-      <div class="list-header">
-        <h2>방명록</h2>
-        <span id="guestbookCount" class="count">0개</span>
-      </div>
-
       <ul id="guestbookList" class="guestbook-list">
-        <li class="loading-message">방명록을 불러오는 중입니다.</li>
+        <li class="empty">방명록을 불러오는 중입니다.</li>
       </ul>
     </section>
   </main>
 
   <script type="module">
+    // Firebase v10+ CDN 모듈
     import {
       initializeApp
     } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
     import {
       getFirestore,
@@ -325,21 +211,183 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
-    /* Firebase 설정값 */
-  const firebaseConfig = {
-   apiKey: "AIzaSyCcHFSk3NRpgLkvOra-mYRQdsiwyxbnfbs",
-   authDomain: "sonice-13ad5.firebaseapp.com",
-   projectId: "sonice-13ad5",
-   storageBucket: "sonice-13ad5.firebasestorage.app",
-   messagingSenderId: "343012493632",
-   appId: "1:343012493632:web:88ecfaab21071f1124d2a5",
-   measurementId: "G-H9MP5SVCL1"
+
+    // Firebase 콘솔의 웹 앱 설정값을 입력하세요.
+   const firebaseConfig = {
+  apiKey: "AIzaSyCcHFSk3NRpgLkvOra-mYRQdsiwyxbnfbs",
+  authDomain: "sonice-13ad5.firebaseapp.com",
+  projectId: "sonice-13ad5",
+  storageBucket: "sonice-13ad5.firebasestorage.app",
+  messagingSenderId: "343012493632",
+  appId: "1:343012493632:web:88ecfaab21071f1124d2a5",
+  measurementId: "G-H9MP5SVCL1"
 };
-    /* Firebase 초기화 */
+
+
+    // Firebase 초기화
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    /* HTML 요소 */
+
+    // HTML 요소
     const guestbookForm = document.getElementById("guestbookForm");
-    const nicknameInput = document.getElementById("nicknameInput");
-    const messageInput = document.getElementById("messageInput
+    const authorInput = document.getElementById("authorInput");
+    const messageInput = document.getElementById("messageInput");
+    const submitButton = document.getElementById("submitButton");
+    const guestbookList = document.getElementById("guestbookList");
+    const status = document.getElementById("status");
+
+
+    // 상태 메시지
+    function showStatus(message, isError = false) {
+      status.textContent = message;
+      status.classList.toggle("error", isError);
+    }
+
+
+    // 날짜 표시
+    function formatDate(timestamp) {
+      if (!timestamp) {
+        return "방금 전";
+      }
+
+      return timestamp.toDate().toLocaleString("ko-KR");
+    }
+
+
+    // 익명 로그인
+    async function startAnonymousLogin() {
+      try {
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          "Firebase 익명 로그인을 확인해 주세요: " + error.code,
+          true
+        );
+      }
+    }
+
+
+    // 로그인 상태 확인
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        showStatus("방명록을 작성할 수 있습니다.");
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+    });
+
+
+    // 방명록 등록
+    guestbookForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const author = authorInput.value.trim();
+      const message = messageInput.value.trim();
+
+      if (!auth.currentUser) {
+        showStatus("Firebase 인증 연결 중입니다.", true);
+        return;
+      }
+
+      if (!author || !message) {
+        showStatus("아이디와 메시지를 모두 입력해 주세요.", true);
+        return;
+      }
+
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "등록 중";
+
+        await addDoc(collection(db, "guestbook"), {
+          author: author,
+          message: message,
+          createdAt: serverTimestamp()
+        });
+
+        messageInput.value = "";
+        messageInput.focus();
+
+        showStatus("등록되었습니다.");
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          "등록 오류: " + error.code,
+          true
+        );
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "등록";
+      }
+    });
+
+
+    // 실시간 방명록 조회
+    const guestbookQuery = query(
+      collection(db, "guestbook"),
+      orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(
+      guestbookQuery,
+
+      (snapshot) => {
+        guestbookList.innerHTML = "";
+
+        if (snapshot.empty) {
+          guestbookList.innerHTML =
+            '<li class="empty">등록된 방명록이 없습니다.</li>';
+          return;
+        }
+
+        snapshot.forEach((documentSnapshot) => {
+          const data = documentSnapshot.data();
+
+          const item = document.createElement("li");
+          item.className = "guestbook-item";
+
+          const authorElement = document.createElement("span");
+          authorElement.className = "author";
+          authorElement.textContent = data.author || "익명";
+
+          const messageElement = document.createElement("span");
+          messageElement.className = "message";
+          messageElement.textContent = data.message || "";
+
+          const dateElement = document.createElement("time");
+          dateElement.className = "date";
+          dateElement.textContent = formatDate(data.createdAt);
+
+          item.append(
+            authorElement,
+            messageElement,
+            dateElement
+          );
+
+          guestbookList.appendChild(item);
+        });
+      },
+
+      (error) => {
+        console.error(error);
+
+        guestbookList.innerHTML =
+          '<li class="empty">방명록을 불러오지 못했습니다.</li>';
+
+        showStatus(
+          "Firestore 읽기 오류: " + error.code,
+          true
+        );
+      }
+    );
+
+
+    // 앱 실행
+    submitButton.disabled = true;
+    startAnonymousLogin();
+  </script>
+</body>
+</html>
