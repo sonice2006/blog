@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>실시간 방명록</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #f5f5f5;
+      color: #333;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .card {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .auth-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .auth-row.no-border {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .user-info img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .user-info .name {
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      color: #333;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .google-btn:hover {
+      background: #f5f5f5;
+    }
+
+    .google-btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .logout-btn {
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      color: #555;
+      font-size: 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .logout-btn:hover {
+      background: #f5f5f5;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      font-size: 15px;
+    }
+
+    input:focus {
+      border-color: #777;
+    }
+
+    input:disabled {
+      background: #f2f2f2;
+      color: #999;
+    }
+
+    #authorInput {
+      width: 130px;
+    }
+
+    #messageInput {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      height: 44px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 8px;
+      background: #333;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #111;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      background: #aaa;
+    }
+
+    .status {
+      margin: 12px 0 0;
+      color: #777;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .status.error {
+      color: #d32f2f;
+    }
+
+    .guestbook-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .guestbook-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .guestbook-item:last-child {
+      border-bottom: 0;
+    }
+
+    .author {
+      margin-right: 8px;
+      font-weight: bold;
+    }
+
+    .message {
+      color: #555;
+    }
+
+    .date {
+      display: block;
+      margin-top: 6px;
+      color: #999;
+      font-size: 12px;
+    }
+
+    .empty {
+      padding: 25px 0;
+      color: #999;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 12px;
+      }
+
+      .input-group {
+        flex-direction: column;
+      }
+
+      #authorInput,
+      #messageInput,
+      button {
+        width: 100%;
+      }
+
+      .auth-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .google-btn {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>실시간 방명록</h1>
+
+    <section class="card">
+      <!-- 로그인 전: 구글 로그인 버튼 -->
+      <div id="loggedOutRow" class="auth-row no-border">
+        <button id="googleLoginButton" class="google-btn" type="button">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+          Google로 로그인
+        </button>
+      </div>
+
+      <!-- 로그인 후: 사용자 정보 -->
+      <div id="loggedInRow" class="auth-row" style="display: none;">
+        <div class="user-info">
+          <img id="userPhoto" src="" alt="">
+          <span id="userName" class="name"></span>
+        </div>
+        <button id="logoutButton" class="logout-btn" type="button">로그아웃</button>
+      </div>
+
+      <form id="guestbookForm" class="input-group">
+        <input
+          id="authorInput"
+          type="text"
+          maxlength="20"
+          placeholder="아이디"
+          required
+          disabled
+        >
+
+        <input
+          id="messageInput"
+          type="text"
+          maxlength="200"
+          placeholder="메시지를 입력하세요"
+          required
+        >
+
+        <button id="submitButton" type="submit" disabled>
+          등록
+        </button>
+      </form>
+
+      <p id="status" class="status">Firebase 연결 중...</p>
+    </section>
+
+    <section class="card">
+      <ul id="guestbookList" class="guestbook-list">
+        <li class="empty">방명록을 불러오는 중입니다.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="module">
+    // Firebase v10+ CDN 모듈
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      onSnapshot,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+
+    // Firebase 콘솔의 웹 앱 설정값을 입력하세요.
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSQntjiC7SP9FhkRwEwnpujxHvJP9HZho",
+      authDomain: "sonice2006-2d7a0.firebaseapp.com",
+      projectId: "sonice2006-2d7a0",
+      storageBucket: "sonice2006-2d7a0.firebasestorage.app",
+      messagingSenderId: "148091192968",
+      appId: "1:148091192968:web:eb3146afd9d99fdaf1813d",
+      measurementId: "G-650PE31W9K"
+    };
+
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+
+    // HTML 요소
+    const guestbookForm = document.getElementById("guestbookForm");
+    const authorInput = document.getElementById("authorInput");
+    const messageInput = document.getElementById("messageInput");
+    const submitButton = document.getElementById("submitButton");
+    const guestbookList = document.getElementById("guestbookList");
+    const status = document.getElementById("status");
+
+    const loggedOutRow = document.getElementById("loggedOutRow");
+    const loggedInRow = document.getElementById("loggedInRow");
+    const googleLoginButton = document.getElementById("googleLoginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const userPhoto = document.getElementById("userPhoto");
+    const userName = document.getElementById("userName");
+
+
+    // 상태 메시지
+    function showStatus(message, isError = false) {
+      status.textContent = message;
+      status.classList.toggle("error", isError);
+    }
+
+
+    // 날짜 표시
+    function formatDate(timestamp) {
+      if (!timestamp) {
+        return "방금 전";
+      }
+
+      return timestamp.toDate().toLocaleString("ko-KR");
+    }
+
+
+    // 구글 로그인
+    googleLoginButton.addEventListener("click", async () => {
+      try {
+        googleLoginButton.disabled = true;
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          "Google 로그인 오류: " + error.code,
+          true
+        );
+      } finally {
+        googleLoginButton.disabled = false;
+      }
+    });
+
+
+    // 로그아웃
+    logoutButton.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          "로그아웃 오류: " + error.code,
+          true
+        );
+      }
+    });
+
+
+    // 로그인 상태 확인
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loggedOutRow.style.display = "none";
+        loggedInRow.style.display = "flex";
+
+        userPhoto.src = user.photoURL || "";
+        userPhoto.alt = user.displayName || "사용자";
+        userName.textContent = user.displayName || user.email || "사용자";
+
+        authorInput.value = user.displayName || user.email || "익명";
+
+        submitButton.disabled = false;
+        showStatus("방명록을 작성할 수 있습니다.");
+      } else {
+        loggedOutRow.style.display = "flex";
+        loggedInRow.style.display = "none";
+
+        authorInput.value = "";
+
+        submitButton.disabled = true;
+        showStatus("방명록을 작성하려면 Google로 로그인해 주세요.");
+      }
+    });
+
+
+    // 방명록 등록
+    guestbookForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const author = authorInput.value.trim();
+      const message = messageInput.value.trim();
+
+      if (!auth.currentUser) {
+        showStatus("Google 로그인이 필요합니다.", true);
+        return;
+      }
+
+      if (!author || !message) {
+        showStatus("아이디와 메시지를 모두 입력해 주세요.", true);
+        return;
+      }
+
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "등록 중";
+
+        await addDoc(collection(db, "guestbook"), {
+          author: author,
+          message: message,
+          uid: auth.currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        messageInput.value = "";
+        messageInput.focus();
+
+        showStatus("등록되었습니다.");
+      } catch (error) {
+        console.error(error);
+        showStatus(
+          "등록 오류: " + error.code,
+          true
+        );
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "등록";
+      }
+    });
+
+
+    // 실시간 방명록 조회
+    const guestbookQuery = query(
+      collection(db, "guestbook"),
+      orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(
+      guestbookQuery,
+
+      (snapshot) => {
+        guestbookList.innerHTML = "";
+
+        if (snapshot.empty) {
+          guestbookList.innerHTML =
+            '<li class="empty">등록된 방명록이 없습니다.</li>';
+          return;
+        }
+
+        snapshot.forEach((documentSnapshot) => {
+          const data = documentSnapshot.data();
+
+          const item = document.createElement("li");
+          item.className = "guestbook-item";
+
+          const authorElement = document.createElement("span");
+          authorElement.className = "author";
+          authorElement.textContent = data.author || "익명";
+
+          const messageElement = document.createElement("span");
+          messageElement.className = "message";
+          messageElement.textContent = data.message || "";
+
+          const dateElement = document.createElement("time");
+          dateElement.className = "date";
+          dateElement.textContent = formatDate(data.createdAt);
+
+          item.append(
+            authorElement,
+            messageElement,
+            dateElement
+          );
+
+          guestbookList.appendChild(item);
+        });
+      },
+
+      (error) => {
+        console.error(error);
+
+        guestbookList.innerHTML =
+          '<li class="empty">방명록을 불러오지 못했습니다.</li>';
+
+        showStatus(
+          "Firestore 읽기 오류: " + error.code,
+          true
+        );
+      }
+    );
+  </script>
+</body>
+</html>
